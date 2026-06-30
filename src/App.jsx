@@ -8,7 +8,7 @@ const TERMINAL_LINES = [
   "> branch: Mechanical Engineering",
   "> role: Student Researcher @ SYSCON",
   "> interests: electronics, robotics, quant",
-  "> repos: 17",
+  "> repos: 20+",
   "> status: BUILDING",
 ];
 
@@ -212,7 +212,7 @@ export default function App() {
               I like to take up challenging stuff, and spend my time tinkering and learning new things.
             </p>
             <div className="hero-stats">
-              <div className="stat"><span className="stat-num">17+</span><span className="stat-label">repos</span></div>
+              <div className="stat"><span className="stat-num">20+</span><span className="stat-label">repos</span></div>
               <div className="stat"><span className="stat-num">UNDEFINED</span><span className="stat-label">3AM ambitious builds</span></div>
               <div className="stat"><span className="stat-num">OVERFLOW</span><span className="stat-label">Ideas</span></div>
             </div>
