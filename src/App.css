@@ -203,6 +203,7 @@ a { text-decoration: none; color: inherit; }
 
 .section-eyebrow {
   font-family: var(--mono);
+  background: radial-gradient(circle at center, transparent 20%, var(--bg) 100%);
   font-size: 0.8rem;
   color: var(--neon);
   letter-spacing: 2px;
