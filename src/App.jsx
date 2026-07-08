@@ -109,10 +109,16 @@ const PROJECTS = [
 
 const EXPERIENCE = [
   {
+    role: "Computational Research Analyst",
+    org: "Youth Economy Lab",
+    period: "July, 2026 — Present",
+    detail: "Selected for competitive global summer program to analyze the intersection of computer science frameworks, quantitative data, and economic systems, in collaberation with Dubai Computer Science Society.",
+  },
+  {
     role: "Undergraduate Student Researcher",
     org: "SYSCON, IIT Bombay",
     period: "June, 2026 — Present",
-    detail: "Under Prof. Rajasekhar Anguluri. Embedding financial transaction codes for LLM-based predictions using FinBERT.",
+    detail: "Selected for the Summer Undergraduate Research Programme (SURP), working under the supervision of Prof. Rajasekhar Anguluri, on 'Evaluation of FinBERT Architecture and Adversarial Robustness in Financial Sentiment Analysis'.",
   },
   {
     role: "ML Research Intern",
