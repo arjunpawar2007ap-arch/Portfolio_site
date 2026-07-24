@@ -334,7 +334,7 @@ function GridBackground() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const spacing = 50;
-      ctx.strokeStyle = "rgba(0, 255, 180, 0.22)";
+      ctx.strokeStyle = "rgba(0, 255, 180, 0.15)";
       ctx.lineWidth = 1;
 
       for (let x = offset % spacing; x < canvas.width; x += spacing) {
