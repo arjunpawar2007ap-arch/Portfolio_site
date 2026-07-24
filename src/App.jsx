@@ -1,68 +1,142 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const TERMINAL_LINES = [
-  "> initializing profile...",
-  "> name: ARJUN PAWAR",
-  "> education: IIT Bombay",
-  "> branch: Mechanical Engineering",
-  "> role: Student Researcher @ SYSCON",
-  "> interests: electronics, robotics, quant",
-  "> repos: 20+",
-  "> status: BUILDING",
-];
-
-function Terminal() {
-  const [lines, setLines] = useState([]);
-  const [currentLine, setCurrentLine] = useState(0);
-  const [currentText, setCurrentText] = useState("");
-  const [done, setDone] = useState(false);
+function TelemetryDashboard() {
+  const canvasRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("SIGNAL");
+  const [metrics, setMetrics] = useState({
+    fps: 60,
+    cpu: 24,
+    mem: "1.2 GB",
+  });
 
   useEffect(() => {
-    if (currentLine >= TERMINAL_LINES.length) {
-      setDone(true);
-      return;
-    }
-    const target = TERMINAL_LINES[currentLine];
-    let i = 0;
-    setCurrentText("");
-    const interval = setInterval(() => {
-      setCurrentText(target.slice(0, i + 1));
-      i++;
-      if (i >= target.length) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setLines(prev => [...prev, target]);
-          setCurrentText("");
-          setCurrentLine(prev => prev + 1);
-        }, 200);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animId;
+    let step = 0;
+
+    const render = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      const width = canvas.width;
+      const height = canvas.height;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Subtle internal grid
+      ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 20) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
       }
-    }, 30);
-    return () => clearInterval(interval);
-  }, [currentLine]);
+      for (let y = 0; y < height; y += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // Draw dynamic wave
+      ctx.beginPath();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#00ffb4";
+
+      for (let x = 0; x < width; x++) {
+        let y = height / 2;
+        if (activeTab === "SIGNAL") {
+          y += Math.sin((x + step) * 0.03) * 22 + Math.sin((x - step) * 0.08) * 8;
+        } else if (activeTab === "SIMULATION") {
+          y += Math.exp(-x * 0.005) * Math.sin((x + step * 2) * 0.05) * 45;
+        } else if (activeTab === "NEURAL") {
+          y += Math.sin(x * 0.1 + step * 0.1) * (Math.cos(x * 0.02) * 30);
+        }
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Scanline pulse
+      const scanX = (step * 2) % width;
+      ctx.strokeStyle = "rgba(0, 200, 255, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(scanX, 0);
+      ctx.lineTo(scanX, height);
+      ctx.stroke();
+
+      step += 1.5;
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const interval = setInterval(() => {
+      setMetrics({
+        fps: Math.floor(58 + Math.random() * 5),
+        cpu: Math.floor(18 + Math.random() * 12),
+        mem: `${(1.18 + Math.random() * 0.08).toFixed(2)} GB`,
+      });
+    }, 1200);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      clearInterval(interval);
+    };
+  }, [activeTab]);
 
   return (
-    <div className="terminal">
+    <div className="telemetry-box">
       <div className="terminal-bar">
         <span className="terminal-dot red" />
         <span className="terminal-dot yellow" />
         <span className="terminal-dot green" />
-        <span className="terminal-title">profile.sh</span>
+        <span className="terminal-title">telemetry_monitor.sys</span>
       </div>
-      <div className="terminal-body">
-        {lines.map((line, i) => (
-          <div key={i} className="terminal-line done">{line}</div>
-        ))}
-        {!done && (
-          <div className="terminal-line">
-            {currentText}<span className="cursor">█</span>
+
+      <div className="telemetry-content">
+        <div className="telemetry-tabs">
+          {["SIGNAL", "SIMULATION", "NEURAL"].map((tab) => (
+            <button
+              key={tab}
+              className={`telemetry-tab ${activeTab === tab ? "active" : ""}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              [{tab}]
+            </button>
+          ))}
+        </div>
+
+        <div className="canvas-wrapper">
+          <canvas ref={canvasRef} className="telemetry-canvas" />
+          <div className="canvas-overlay">
+            <span>FREQ: 440 Hz</span>
+            <span>STATUS: ACTIVE</span>
           </div>
-        )}
-        {done && (
-          <div className="terminal-line">
-            &gt; _<span className="cursor">█</span>
+        </div>
+
+        <div className="telemetry-metrics">
+          <div className="metric-card">
+            <span className="metric-title">CPU LOAD</span>
+            <span className="metric-val">{metrics.cpu}%</span>
           </div>
-        )}
+          <div className="metric-card">
+            <span className="metric-title">SYS MEM</span>
+            <span className="metric-val">{metrics.mem}</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-title">RENDER FPS</span>
+            <span className="metric-val">{metrics.fps}</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-title">STATE</span>
+            <span className="metric-val highlight">ONLINE</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -104,7 +178,7 @@ const PROJECTS = [
     tag: "Embedded Electronics",
     desc: "Designed from first principles. 600+ transitors, 900+ resistors hand placed and simulated in LTspice and Logisim.",
     link: "https://github.com/arjunpawar2007ap-arch/4Bit_CPU_datapath.git",
-  }
+  },
 ];
 
 const EXPERIENCE = [
@@ -152,13 +226,13 @@ function GridBackground() {
       ctx.strokeStyle = "rgba(0, 255, 180, 0.07)";
       ctx.lineWidth = 1;
 
-      for (let x = (offset % spacing); x < canvas.width; x += spacing) {
+      for (let x = offset % spacing; x < canvas.width; x += spacing) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, canvas.height);
         ctx.stroke();
       }
-      for (let y = (offset % spacing); y < canvas.height; y += spacing) {
+      for (let y = offset % spacing; y < canvas.height; y += spacing) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
@@ -188,7 +262,12 @@ function TypewriterText({ text, speed = 60 }) {
     }, speed);
     return () => clearInterval(interval);
   }, [text, speed]);
-  return <span>{displayed}<span className="cursor">█</span></span>;
+  return (
+    <span>
+      {displayed}
+      <span className="cursor">█</span>
+    </span>
+  );
 }
 
 export default function App() {
@@ -218,17 +297,30 @@ export default function App() {
               I like to take up challenging stuff, and spend my time tinkering and learning new things.
             </p>
             <div className="hero-stats">
-              <div className="stat"><span className="stat-num">20+</span><span className="stat-label">repos</span></div>
-              <div className="stat"><span className="stat-num">UNDEFINED</span><span className="stat-label">3AM ambitious builds</span></div>
-              <div className="stat"><span className="stat-num">OVERFLOW</span><span className="stat-label">Ideas</span></div>
+              <div className="stat">
+                <span className="stat-num">20+</span>
+                <span className="stat-label">repos</span>
+              </div>
+              <div className="stat">
+                <span className="stat-num">UNDEFINED</span>
+                <span className="stat-label">3AM ambitious builds</span>
+              </div>
+              <div className="stat">
+                <span className="stat-num">OVERFLOW</span>
+                <span className="stat-label">Ideas</span>
+              </div>
             </div>
             <div className="hero-cta">
-              <a href="https://github.com/arjunpawar2007ap-arch" className="btn-primary" target="_blank" rel="noreferrer">GitHub</a>
-              <a href="#projects" className="btn-secondary">view work ↓</a>
+              <a href="https://github.com/arjunpawar2007ap-arch" className="btn-primary" target="_blank" rel="noreferrer">
+                GitHub
+              </a>
+              <a href="#projects" className="btn-secondary">
+                view work ↓
+              </a>
             </div>
           </div>
           <div className="hero-ascii">
-            <Terminal />
+            <TelemetryDashboard />
           </div>
         </div>
       </section>
@@ -272,9 +364,15 @@ export default function App() {
         <h2 className="section-title">Contact</h2>
         <p className="contact-sub">Find me on the internet or drop a message.</p>
         <div className="contact-links">
-          <a href="https://github.com/arjunpawar2007ap-arch" target="_blank" rel="noreferrer" className="contact-link">GitHub</a>
-          <a href="https://www.linkedin.com/in/arjun-pawar-959177277/" target="_blank" rel="noreferrer" className="contact-link">LinkedIn</a>
-          <a href="mailto:25b2286@iitb.ac.in" className="contact-link">Email</a>
+          <a href="https://github.com/arjunpawar2007ap-arch" target="_blank" rel="noreferrer" className="contact-link">
+            GitHub
+          </a>
+          <a href="https://www.linkedin.com/in/arjun-pawar-959177277/" target="_blank" rel="noreferrer" className="contact-link">
+            LinkedIn
+          </a>
+          <a href="mailto:25b2286@iitb.ac.in" className="contact-link">
+            Email
+          </a>
         </div>
       </section>
 
