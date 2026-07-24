@@ -4,64 +4,8 @@ import "./App.css";
 function TelemetryDashboard() {
   const canvasRef = useRef(null);
   const [activeTab, setActiveTab] = useState("GITHUB");
-  const [loading, setLoading] = useState(true);
-  
-  const [githubStats, setGithubStats] = useState({
-    repos: 20,
-    followers: 0,
-    status: "ACTIVE",
-  });
-  
-  const [leetcodeStats, setLeetcodeStats] = useState({
-    solved: 0,
-    easy: 0,
-    medium: 0,
-    hard: 0,
-    ranking: "N/A",
-  });
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const ghRes = await fetch("https://api.github.com/users/arjunpawar2007ap-arch");
-        if (ghRes.ok) {
-          const ghData = await ghRes.json();
-          setGithubStats({
-            repos: ghData.public_repos ?? 20,
-            followers: ghData.followers ?? 0,
-            status: "ONLINE",
-          });
-        }
-      } catch (err) {
-        console.warn("GitHub fetch failed, using fallback metrics.", err);
-      }
-
-      try {
-      const lcRes = await fetch(
-        "https://corsproxy.io/?" + encodeURIComponent("https://leetcode-stats-api.herokuapp.com/napoleonictrafficcone08")
-      );
-      if (lcRes.ok) {
-        const lcData = await lcRes.json();
-        if (lcData.status === "success") {
-          setLeetcodeStats({
-            solved: lcData.totalSolved ?? 0,
-            easy: lcData.easySolved ?? 0,
-            medium: lcData.mediumSolved ?? 0,
-            hard: lcData.hardSolved ?? 0,
-            ranking: lcData.ranking ? `#${lcData.ranking.toLocaleString()}` : "ACTIVE",
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("LeetCode fetch failed, using fallback metrics.", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  fetchStats();
-}, []);
-
+  // Waveform oscilloscope canvas animation
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -77,6 +21,7 @@ function TelemetryDashboard() {
 
       ctx.clearRect(0, 0, width, height);
 
+      // Background grid
       ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 20) {
@@ -91,22 +36,25 @@ function TelemetryDashboard() {
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
       }
+
+      // Waveform trace
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#00c8ff";
+      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#ffa116";
 
       for (let x = 0; x < width; x++) {
         let y = height / 2;
         if (activeTab === "GITHUB") {
           y += Math.sin((x + step) * 0.03) * 18 + Math.sin((x - step) * 0.06) * 10;
         } else {
-          y += Math.sin(Math.floor(x / 15) * 0.5 + step * 0.05) * 25;
+          y += Math.sin(Math.floor(x / 15) * 0.5 + step * 0.05) * 22;
         }
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
+      // Radar scanline
       const scanX = (step * 2) % width;
       ctx.strokeStyle = "rgba(0, 200, 255, 0.3)";
       ctx.lineWidth = 1;
@@ -129,7 +77,7 @@ function TelemetryDashboard() {
         <span className="terminal-dot red" />
         <span className="terminal-dot yellow" />
         <span className="terminal-dot green" />
-        <span className="terminal-title">live_metrics_feed.sys</span>
+        <span className="terminal-title">dev_metrics_feed.sys</span>
       </div>
 
       <div className="telemetry-content">
@@ -149,55 +97,31 @@ function TelemetryDashboard() {
           </button>
         </div>
 
-        {/* Live Signal Oscilloscope Canvas */}
+        {/* Oscilloscope Canvas */}
         <div className="canvas-wrapper">
           <canvas ref={canvasRef} className="telemetry-canvas" />
           <div className="canvas-overlay">
             <span>SOURCE: {activeTab}</span>
-            <span>API: {loading ? "FETCHING..." : "LIVE_CONNECTED"}</span>
+            <span>STATUS: STREAMING</span>
           </div>
         </div>
 
-        {/* Dynamic Metric Display Panels */}
-        {activeTab === "GITHUB" ? (
-          <div className="telemetry-metrics">
-            <div className="metric-card">
-              <span className="metric-title">PUBLIC REPOS</span>
-              <span className="metric-val highlight">{githubStats.repos}</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-title">FOLLOWERS</span>
-              <span className="metric-val">{githubStats.followers}</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-title">PROFILE STATUS</span>
-              <span className="metric-val highlight">{githubStats.status}</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-title">HANDLE</span>
-              <span className="metric-val sub-text">@arjunpawar2007ap-arch</span>
-            </div>
-          </div>
-        ) : (
-          <div className="telemetry-metrics">
-            <div className="metric-card">
-              <span className="metric-title">SOLVED PROBLEMS</span>
-              <span className="metric-val highlight">{leetcodeStats.solved}</span>
-            </div>
-            <div className="metric-card">
-              <span className="metric-title">GLOBAL RANK</span>
-              <span className="metric-val">{leetcodeStats.ranking}</span>
-            </div>
-            <div className="metric-card full-width">
-              <span className="metric-title">DIFFICULTY BREAKDOWN</span>
-              <div className="difficulty-pills">
-                <span className="pill easy">EASY: {leetcodeStats.easy}</span>
-                <span className="pill medium">MED: {leetcodeStats.medium}</span>
-                <span className="pill hard">HARD: {leetcodeStats.hard}</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Dynamic Badge Display */}
+        <div className="telemetry-card-container">
+          {activeTab === "GITHUB" ? (
+            <img
+              src="https://github-readme-stats.vercel.app/api?username=arjunpawar2007ap-arch&show_icons=true&theme=dark&bg_color=060b14&title_color=00ffb4&text_color=c8d8e8&icon_color=00c8ff&border_color=00ffb422&hide_border=false"
+              alt="GitHub Stats"
+              className="stats-badge-img"
+            />
+          ) : (
+            <img
+              src="https://leetcode-stats-six.vercel.app/api?username=arjunpawar2007ap&theme=dark"
+              alt="LeetCode Stats"
+              className="stats-badge-img"
+            />
+          )}
+        </div>
       </div>
     </div>
   );
