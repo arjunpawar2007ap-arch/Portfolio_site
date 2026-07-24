@@ -37,28 +37,30 @@ function TelemetryDashboard() {
       }
 
       try {
-        const lcRes = await fetch("https://leetcode-stats-api.herokuapp.com/napoleonictrafficcone08");
-        if (lcRes.ok) {
-          const lcData = await lcRes.json();
-          if (lcData.status === "success") {
-            setLeetcodeStats({
-              solved: lcData.totalSolved ?? 0,
-              easy: lcData.easySolved ?? 0,
-              medium: lcData.mediumSolved ?? 0,
-              hard: lcData.hardSolved ?? 0,
-              ranking: lcData.ranking ? `#${lcData.ranking.toLocaleString()}` : "TOP 5%",
-            });
-          }
+      const lcRes = await fetch(
+        "https://corsproxy.io/?" + encodeURIComponent("https://leetcode-stats-api.herokuapp.com/napoleonictrafficcone08")
+      );
+      if (lcRes.ok) {
+        const lcData = await lcRes.json();
+        if (lcData.status === "success") {
+          setLeetcodeStats({
+            solved: lcData.totalSolved ?? 0,
+            easy: lcData.easySolved ?? 0,
+            medium: lcData.mediumSolved ?? 0,
+            hard: lcData.hardSolved ?? 0,
+            ranking: lcData.ranking ? `#${lcData.ranking.toLocaleString()}` : "ACTIVE",
+          });
         }
-      } catch (err) {
-        console.warn("LeetCode fetch failed, using fallback metrics.", err);
-      } finally {
-        setLoading(false);
       }
+    } catch (err) {
+      console.warn("LeetCode fetch failed, using fallback metrics.", err);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    fetchStats();
-  }, []);
+  fetchStats();
+}, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
