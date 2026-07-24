@@ -289,7 +289,7 @@ a { text-decoration: none; color: inherit; }
 .canvas-wrapper {
   position: relative;
   width: 100%;
-  height: 120px;
+  height: 110px;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(0, 255, 180, 0.1);
   overflow: hidden;
@@ -313,76 +313,26 @@ a { text-decoration: none; color: inherit; }
   pointer-events: none;
 }
 
-.telemetry-metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-}
-
-.metric-card {
+/* Badge Render Container */
+.telemetry-card-container {
+  width: 100%;
+  min-height: 140px;
   background: #060b14;
-  border: 1px solid rgba(0, 255, 180, 0.08);
-  padding: 0.5rem;
+  border: 1px solid rgba(0, 255, 180, 0.1);
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.2rem;
 }
 
-.metric-card.full-width {
-  grid-column: span 2;
-}
-
-.metric-title {
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-
-.metric-val {
-  font-size: 0.9rem;
-  color: var(--neon2);
-  margin-top: 0.2rem;
-}
-
-.metric-val.highlight {
-  color: var(--neon);
-}
-
-.metric-val.sub-text {
-  font-size: 0.7rem;
-  color: var(--text);
-  word-break: break-all;
-}
-
-/* LeetCode Difficulty Pills */
-.difficulty-pills {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-}
-
-.pill {
-  font-size: 0.65rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 2px;
-  border: 1px solid transparent;
-}
-
-.pill.easy {
-  color: #28c840;
-  border-color: rgba(40, 200, 64, 0.3);
-  background: rgba(40, 200, 64, 0.05);
-}
-
-.pill.medium {
-  color: #febc2e;
-  border-color: rgba(254, 188, 46, 0.3);
-  background: rgba(254, 188, 46, 0.05);
-}
-
-.pill.hard {
-  color: #ff5f57;
-  border-color: rgba(255, 95, 87, 0.3);
-  background: rgba(255, 95, 87, 0.05);
+.stats-badge-img {
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
+  display: block;
+  filter: contrast(1.05);
 }
 
 @media (max-width: 900px) {
