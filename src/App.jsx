@@ -294,7 +294,7 @@ const PROJECTS = [
 
 const EXPERIENCE = [
   {
-    role: "Computational Research Analyst",
+    role: "Computational Research Fellow",
     org: "Youth Economy Lab",
     period: "July, 2026 — Present",
     detail: "Selected for competitive global summer program to analyze the intersection of computer science frameworks, quantitative data, and economic systems, in collaberation with Dubai Computer Science Society.",
@@ -304,12 +304,6 @@ const EXPERIENCE = [
     org: "SYSCON, IIT Bombay",
     period: "June, 2026 — Present",
     detail: "Selected for the Summer Undergraduate Research Programme (SURP), working under the supervision of Prof. Rajasekhar Anguluri, on 'Evaluation of FinBERT Architecture and Adversarial Robustness in Financial Sentiment Analysis'.",
-  },
-  {
-    role: "ML Research Intern",
-    org: "FlyRank AI",
-    period: "June, 2026 — Present",
-    detail: "Self-paced research role. Working on ML pipelines and model experimentation.",
   },
   {
     role: "Trainee",
