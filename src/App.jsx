@@ -3,12 +3,62 @@ import "./App.css";
 
 function TelemetryDashboard() {
   const canvasRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("SIGNAL");
-  const [metrics, setMetrics] = useState({
-    fps: 60,
-    cpu: 24,
-    mem: "1.2 GB",
+  const [activeTab, setActiveTab] = useState("GITHUB");
+  const [loading, setLoading] = useState(true);
+  
+  const [githubStats, setGithubStats] = useState({
+    repos: 20,
+    followers: 0,
+    status: "ACTIVE",
   });
+  
+  const [leetcodeStats, setLeetcodeStats] = useState({
+    solved: 0,
+    easy: 0,
+    medium: 0,
+    hard: 0,
+    ranking: "N/A",
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const ghRes = await fetch("https://api.github.com/users/arjunpawar2007ap-arch");
+        if (ghRes.ok) {
+          const ghData = await ghRes.json();
+          setGithubStats({
+            repos: ghData.public_repos ?? 20,
+            followers: ghData.followers ?? 0,
+            status: "ONLINE",
+          });
+        }
+      } catch (err) {
+        console.warn("GitHub fetch failed, using fallback metrics.", err);
+      }
+
+      try {
+        const lcRes = await fetch("https://leetcode-stats-api.herokuapp.com/napoleonictrafficcone08");
+        if (lcRes.ok) {
+          const lcData = await lcRes.json();
+          if (lcData.status === "success") {
+            setLeetcodeStats({
+              solved: lcData.totalSolved ?? 0,
+              easy: lcData.easySolved ?? 0,
+              medium: lcData.mediumSolved ?? 0,
+              hard: lcData.hardSolved ?? 0,
+              ranking: lcData.ranking ? `#${lcData.ranking.toLocaleString()}` : "TOP 5%",
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("LeetCode fetch failed, using fallback metrics.", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,7 +75,6 @@ function TelemetryDashboard() {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Subtle internal grid
       ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 20) {
@@ -37,32 +86,27 @@ function TelemetryDashboard() {
       for (let y = 0; y < height; y += 20) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
+        ctx.lineTo(canvas.width, y);
         ctx.stroke();
       }
-
-      // Draw dynamic wave
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "#00ffb4";
+      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#00c8ff";
 
       for (let x = 0; x < width; x++) {
         let y = height / 2;
-        if (activeTab === "SIGNAL") {
-          y += Math.sin((x + step) * 0.03) * 22 + Math.sin((x - step) * 0.08) * 8;
-        } else if (activeTab === "SIMULATION") {
-          y += Math.exp(-x * 0.005) * Math.sin((x + step * 2) * 0.05) * 45;
-        } else if (activeTab === "NEURAL") {
-          y += Math.sin(x * 0.1 + step * 0.1) * (Math.cos(x * 0.02) * 30);
+        if (activeTab === "GITHUB") {
+          y += Math.sin((x + step) * 0.03) * 18 + Math.sin((x - step) * 0.06) * 10;
+        } else {
+          y += Math.sin(Math.floor(x / 15) * 0.5 + step * 0.05) * 25;
         }
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
-      // Scanline pulse
       const scanX = (step * 2) % width;
-      ctx.strokeStyle = "rgba(0, 200, 255, 0.4)";
+      ctx.strokeStyle = "rgba(0, 200, 255, 0.3)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(scanX, 0);
@@ -74,19 +118,7 @@ function TelemetryDashboard() {
     };
 
     render();
-
-    const interval = setInterval(() => {
-      setMetrics({
-        fps: Math.floor(58 + Math.random() * 5),
-        cpu: Math.floor(18 + Math.random() * 12),
-        mem: `${(1.18 + Math.random() * 0.08).toFixed(2)} GB`,
-      });
-    }, 1200);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      clearInterval(interval);
-    };
+    return () => cancelAnimationFrame(animId);
   }, [activeTab]);
 
   return (
@@ -95,48 +127,75 @@ function TelemetryDashboard() {
         <span className="terminal-dot red" />
         <span className="terminal-dot yellow" />
         <span className="terminal-dot green" />
-        <span className="terminal-title">telemetry_monitor.sys</span>
+        <span className="terminal-title">live_metrics_feed.sys</span>
       </div>
 
       <div className="telemetry-content">
+        {/* Source Selector Tabs */}
         <div className="telemetry-tabs">
-          {["SIGNAL", "SIMULATION", "NEURAL"].map((tab) => (
-            <button
-              key={tab}
-              className={`telemetry-tab ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              [{tab}]
-            </button>
-          ))}
+          <button
+            className={`telemetry-tab ${activeTab === "GITHUB" ? "active" : ""}`}
+            onClick={() => setActiveTab("GITHUB")}
+          >
+            [GITHUB_FEED]
+          </button>
+          <button
+            className={`telemetry-tab ${activeTab === "LEETCODE" ? "active" : ""}`}
+            onClick={() => setActiveTab("LEETCODE")}
+          >
+            [LEETCODE_FEED]
+          </button>
         </div>
 
+        {/* Live Signal Oscilloscope Canvas */}
         <div className="canvas-wrapper">
           <canvas ref={canvasRef} className="telemetry-canvas" />
           <div className="canvas-overlay">
-            <span>FREQ: 440 Hz</span>
-            <span>STATUS: ACTIVE</span>
+            <span>SOURCE: {activeTab}</span>
+            <span>API: {loading ? "FETCHING..." : "LIVE_CONNECTED"}</span>
           </div>
         </div>
 
-        <div className="telemetry-metrics">
-          <div className="metric-card">
-            <span className="metric-title">CPU LOAD</span>
-            <span className="metric-val">{metrics.cpu}%</span>
+        {/* Dynamic Metric Display Panels */}
+        {activeTab === "GITHUB" ? (
+          <div className="telemetry-metrics">
+            <div className="metric-card">
+              <span className="metric-title">PUBLIC REPOS</span>
+              <span className="metric-val highlight">{githubStats.repos}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">FOLLOWERS</span>
+              <span className="metric-val">{githubStats.followers}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">PROFILE STATUS</span>
+              <span className="metric-val highlight">{githubStats.status}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">HANDLE</span>
+              <span className="metric-val sub-text">@arjunpawar2007ap-arch</span>
+            </div>
           </div>
-          <div className="metric-card">
-            <span className="metric-title">SYS MEM</span>
-            <span className="metric-val">{metrics.mem}</span>
+        ) : (
+          <div className="telemetry-metrics">
+            <div className="metric-card">
+              <span className="metric-title">SOLVED PROBLEMS</span>
+              <span className="metric-val highlight">{leetcodeStats.solved}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">GLOBAL RANK</span>
+              <span className="metric-val">{leetcodeStats.ranking}</span>
+            </div>
+            <div className="metric-card full-width">
+              <span className="metric-title">DIFFICULTY BREAKDOWN</span>
+              <div className="difficulty-pills">
+                <span className="pill easy">EASY: {leetcodeStats.easy}</span>
+                <span className="pill medium">MED: {leetcodeStats.medium}</span>
+                <span className="pill hard">HARD: {leetcodeStats.hard}</span>
+              </div>
+            </div>
           </div>
-          <div className="metric-card">
-            <span className="metric-title">RENDER FPS</span>
-            <span className="metric-val">{metrics.fps}</span>
-          </div>
-          <div className="metric-card">
-            <span className="metric-title">STATE</span>
-            <span className="metric-val highlight">ONLINE</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
