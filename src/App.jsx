@@ -24,49 +24,31 @@ function TelemetryDashboard() {
   const [contestHistory, setContestHistory] = useState([]);
 
   useEffect(() => {
-    // 1. Fetch GitHub User Profile Stats
-    fetch("https://api.github.com/users/arjunpawar2007ap-arch")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.public_repos !== undefined) {
-          setGhStats({
-            repos: data.public_repos,
-            followers: data.followers || 0,
-            status: "ONLINE",
-          });
-        }
-      })
-      .catch((err) => console.warn("GitHub stats fetch issue:", err));
+  // 1. Fetch GitHub Stats
+  fetch("https://api.github.com/users/arjunpawar2007ap-arch")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.public_repos !== undefined) {
+        setGhStats({
+          repos: data.public_repos,
+          followers: data.followers || 0,
+          status: "ONLINE",
+        });
+      }
+    })
+    .catch((err) => console.warn("GitHub stats fetch issue:", err));
 
-    // 2. Fetch GitHub 90-Day Commit Activity
-    fetch("https://api.github.com/users/arjunpawar2007ap-arch/events?per_page=100")
-      .then((res) => res.json())
-      .then((events) => {
-        if (Array.isArray(events)) {
-          // Aggregate push commits by date over the last 90 days
-          const daysMap = {};
-          const now = new Date();
-          for (let i = 89; i >= 0; i--) {
-            const d = new Date(now);
-            d.setDate(d.getDate() - i);
-            const key = d.toISOString().split("T")[0];
-            daysMap[key] = 0;
-          }
-
-          events.forEach((ev) => {
-            if (ev.type === "PushEvent" && ev.created_at) {
-              const dateKey = ev.created_at.split("T")[0];
-              if (daysMap[dateKey] !== undefined) {
-                const count = ev.payload?.commits?.length || 1;
-                daysMap[dateKey] += count;
-              }
-            }
-          });
-
-          setCommitHistory(Object.values(daysMap));
-        }
-      })
-      .catch((err) => console.warn("GitHub events fetch issue:", err));
+  // 2. Fetch EXACT Contribution Graph Data (Last 90 Days)
+  fetch("https://github-contributions-api.jogruber.de/v4/arjunpawar2007ap-arch?y=last")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data && data.contributions) {
+        // Grab the last 90 days directly from the profile contribution calendar
+        const last90Days = data.contributions.slice(-90).map((day) => day.count);
+        setCommitHistory(last90Days);
+      }
+    })
+    .catch((err) => console.warn("Contributions API fetch issue:", err));
 
     // 3. Fetch LeetCode Solved & Contest Stats
     fetch("https://leetcode-stats.tashif.codes/napoleonictrafficcone08")
