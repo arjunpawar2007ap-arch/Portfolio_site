@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Press+Start+2P&family=Inter:wght@300;400;500&display=swap');
 
-
 :root {
   --bg: #050810;
   --bg2: #080d18;
@@ -218,14 +217,7 @@ a { text-decoration: none; color: inherit; }
   line-height: 1.6;
 }
 
-.terminal {
-  width: 380px;
-  background: #020509;
-  border: 1px solid var(--border);
-  box-shadow: 0 0 40px rgba(0, 255, 180, 0.08);
-  font-family: var(--mono);
-}
-
+/* Common Header Bar */
 .terminal-bar {
   display: flex;
   align-items: center;
@@ -253,24 +245,107 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 1px;
 }
 
-.terminal-body {
-  padding: 1.2rem 1.5rem;
-  min-height: 280px;
+/* Telemetry Module Styles */
+.telemetry-box {
+  width: 380px;
+  background: #020509;
+  border: 1px solid var(--border);
+  box-shadow: 0 0 40px rgba(0, 255, 180, 0.08);
+  font-family: var(--mono);
 }
 
-.terminal-line {
-  font-size: 0.8rem;
+.telemetry-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.telemetry-tabs {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.telemetry-tab {
+  background: transparent;
+  border: 1px solid var(--border);
   color: var(--text-dim);
-  line-height: 2;
-  white-space: pre;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.terminal-line.done { color: var(--neon); }
+.telemetry-tab:hover,
+.telemetry-tab.active {
+  color: var(--neon);
+  border-color: var(--neon);
+  box-shadow: 0 0 10px rgba(0, 255, 180, 0.2);
+}
+
+.canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 180, 0.1);
+  overflow: hidden;
+}
+
+.telemetry-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.canvas-overlay {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  left: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.telemetry-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.metric-card {
+  background: #060b14;
+  border: 1px solid rgba(0, 255, 180, 0.08);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-title {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.metric-val {
+  font-size: 0.9rem;
+  color: var(--neon2);
+  margin-top: 0.2rem;
+}
+
+.metric-val.highlight {
+  color: var(--neon);
+}
 
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }
   .hero-ascii { display: none; }
-  .terminal { width: 100%; }
+  .telemetry-box { width: 100%; }
 }
 
 .projects-grid {
