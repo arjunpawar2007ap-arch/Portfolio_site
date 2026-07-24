@@ -22,7 +22,6 @@ function TelemetryDashboard() {
   });
 
   useEffect(() => {
-    // 1. Fetch GitHub Stats
     fetch("https://api.github.com/users/arjunpawar2007ap-arch")
       .then((res) => res.json())
       .then((data) => {
@@ -36,8 +35,7 @@ function TelemetryDashboard() {
       })
       .catch((err) => console.warn("GitHub fetch issue, fallback active.", err));
 
-    // 2. Fetch LeetCode Stats
-    fetch("https://leetcode-stats-api.herokuapp.com/napoleonictrafficcone08")
+    fetch("https://leetcode-stats.tashif.codes/napoleonictrafficcone08")
       .then((res) => res.json())
       .then((data) => {
         if (data.status === "success" && data.totalSolved > 0) {
