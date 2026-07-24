@@ -245,7 +245,7 @@ a { text-decoration: none; color: inherit; }
   letter-spacing: 1px;
 }
 
-/* Telemetry Stats Module */
+/* Telemetry Box Header & Canvas */
 .telemetry-box {
   width: 380px;
   background: #020509;
@@ -313,27 +313,62 @@ a { text-decoration: none; color: inherit; }
   pointer-events: none;
 }
 
-/* Badge Render Container */
-.telemetry-card-container {
-  width: 100%;
-  min-height: 140px;
-  background: #060b14;
-  border: 1px solid rgba(0, 255, 180, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  padding: 0.2rem;
+/* Telemetry Native Metrics Grid */
+.telemetry-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
 }
 
-.stats-badge-img {
-  width: 100%;
-  height: auto;
-  max-height: 150px;
-  object-fit: contain;
-  display: block;
-  filter: contrast(1.05);
+.metric-card {
+  background: #060b14;
+  border: 1px solid rgba(0, 255, 180, 0.1);
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
 }
+
+.metric-card.full-width {
+  grid-column: span 2;
+}
+
+.metric-title {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.metric-val {
+  font-size: 1rem;
+  color: var(--neon2);
+  margin-top: 0.2rem;
+}
+
+.metric-val.highlight {
+  color: var(--neon);
+}
+
+.metric-val.sub-text {
+  font-size: 0.75rem;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.difficulty-pills {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.pill {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 2px;
+}
+
+.pill.easy { color: #28c840; background: rgba(40, 200, 64, 0.1); }
+.pill.medium { color: #febc2e; background: rgba(254, 188, 46, 0.1); }
+.pill.hard { color: #ff5f57; background: rgba(255, 95, 87, 0.1); }
 
 @media (max-width: 900px) {
   .hero-inner { grid-template-columns: 1fr; }
