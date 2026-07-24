@@ -5,7 +5,55 @@ function TelemetryDashboard() {
   const canvasRef = useRef(null);
   const [activeTab, setActiveTab] = useState("GITHUB");
 
-  // Waveform oscilloscope canvas animation
+  // GitHub Stats State
+  const [ghStats, setGhStats] = useState({
+    repos: 20,
+    followers: 1,
+    status: "ONLINE",
+  });
+
+  // LeetCode Stats State
+  const [lcStats, setLcStats] = useState({
+    solved: 120,
+    easy: 45,
+    medium: 65,
+    hard: 10,
+    ranking: "#250K",
+  });
+
+  useEffect(() => {
+    // 1. Fetch GitHub Stats
+    fetch("https://api.github.com/users/arjunpawar2007ap-arch")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.public_repos !== undefined) {
+          setGhStats({
+            repos: data.public_repos,
+            followers: data.followers || 0,
+            status: "ONLINE",
+          });
+        }
+      })
+      .catch((err) => console.warn("GitHub fetch issue, fallback active.", err));
+
+    // 2. Fetch LeetCode Stats
+    fetch("https://leetcode-stats-api.herokuapp.com/arjunpawar2007ap")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "success" && data.totalSolved > 0) {
+          setLcStats({
+            solved: data.totalSolved,
+            easy: data.easySolved,
+            medium: data.mediumSolved,
+            hard: data.hardSolved,
+            ranking: data.ranking ? `#${data.ranking.toLocaleString()}` : "TOP 5%",
+          });
+        }
+      })
+      .catch((err) => console.warn("LeetCode API issue, using local stats.", err));
+  }, []);
+
+  // Oscilloscope Canvas Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -21,26 +69,20 @@ function TelemetryDashboard() {
 
       ctx.clearRect(0, 0, width, height);
 
-      // Background grid
+      // Grid Background
       ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
       ctx.lineWidth = 1;
       for (let x = 0; x < width; x += 20) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
       }
       for (let y = 0; y < height; y += 20) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
       }
 
-      // Waveform trace
+      // Dynamic Waveform
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#ffa116";
+      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#00c8ff";
 
       for (let x = 0; x < width; x++) {
         let y = height / 2;
@@ -54,14 +96,11 @@ function TelemetryDashboard() {
       }
       ctx.stroke();
 
-      // Radar scanline
+      // Scanline
       const scanX = (step * 2) % width;
       ctx.strokeStyle = "rgba(0, 200, 255, 0.3)";
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(scanX, 0);
-      ctx.lineTo(scanX, height);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(scanX, 0); ctx.lineTo(scanX, height); ctx.stroke();
 
       step += 1.5;
       animId = requestAnimationFrame(render);
@@ -77,11 +116,10 @@ function TelemetryDashboard() {
         <span className="terminal-dot red" />
         <span className="terminal-dot yellow" />
         <span className="terminal-dot green" />
-        <span className="terminal-title">dev_metrics_feed.sys</span>
+        <span className="terminal-title">live_metrics.sys</span>
       </div>
 
       <div className="telemetry-content">
-        {/* Source Selector Tabs */}
         <div className="telemetry-tabs">
           <button
             className={`telemetry-tab ${activeTab === "GITHUB" ? "active" : ""}`}
@@ -97,31 +135,49 @@ function TelemetryDashboard() {
           </button>
         </div>
 
-        {/* Oscilloscope Canvas */}
         <div className="canvas-wrapper">
           <canvas ref={canvasRef} className="telemetry-canvas" />
           <div className="canvas-overlay">
-            <span>SOURCE: {activeTab}</span>
-            <span>STATUS: STREAMING</span>
+            <span>FEED: {activeTab}</span>
+            <span>STATUS: ACTIVE</span>
           </div>
         </div>
 
-        {/* Dynamic Badge Display */}
-        <div className="telemetry-card-container">
-          {activeTab === "GITHUB" ? (
-            <img
-              src="https://github-readme-stats.vercel.app/api?username=arjunpawar2007ap-arch&show_icons=true&theme=dark&bg_color=060b14&title_color=00ffb4&text_color=c8d8e8&icon_color=00c8ff&border_color=00ffb422&hide_border=false"
-              alt="GitHub Stats"
-              className="stats-badge-img"
-            />
-          ) : (
-            <img
-              src="https://leetcode-stats-six.vercel.app/api?username=arjunpawar2007ap&theme=dark"
-              alt="LeetCode Stats"
-              className="stats-badge-img"
-            />
-          )}
-        </div>
+        {activeTab === "GITHUB" ? (
+          <div className="telemetry-metrics">
+            <div className="metric-card">
+              <span className="metric-title">PUBLIC REPOS</span>
+              <span className="metric-val highlight">{ghStats.repos}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">FOLLOWERS</span>
+              <span className="metric-val">{ghStats.followers}</span>
+            </div>
+            <div className="metric-card full-width">
+              <span className="metric-title">HANDLE</span>
+              <span className="metric-val sub-text">@arjunpawar2007ap-arch</span>
+            </div>
+          </div>
+        ) : (
+          <div className="telemetry-metrics">
+            <div className="metric-card">
+              <span className="metric-title">TOTAL SOLVED</span>
+              <span className="metric-val highlight">{lcStats.solved}</span>
+            </div>
+            <div className="metric-card">
+              <span className="metric-title">RANKING</span>
+              <span className="metric-val">{lcStats.ranking}</span>
+            </div>
+            <div className="metric-card full-width">
+              <span className="metric-title">DIFFICULTY</span>
+              <div className="difficulty-pills">
+                <span className="pill easy">EASY: {lcStats.easy}</span>
+                <span className="pill medium">MED: {lcStats.medium}</span>
+                <span className="pill hard">HARD: {lcStats.hard}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
