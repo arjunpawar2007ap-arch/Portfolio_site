@@ -5,23 +5,26 @@ function TelemetryDashboard() {
   const canvasRef = useRef(null);
   const [activeTab, setActiveTab] = useState("GITHUB");
 
-  // GitHub Stats State
+  // GitHub Stats
   const [ghStats, setGhStats] = useState({
     repos: 20,
     followers: 1,
     status: "ONLINE",
   });
+  const [commitHistory, setCommitHistory] = useState([]);
 
-  // LeetCode Stats State
+  // LeetCode Stats
   const [lcStats, setLcStats] = useState({
-    solved: 120,
-    easy: 45,
-    medium: 65,
-    hard: 10,
-    ranking: "#250K",
+    solved: 80,
+    easy: 35,
+    medium: 40,
+    hard: 5,
+    ranking: "ACTIVE",
   });
+  const [contestHistory, setContestHistory] = useState([]);
 
   useEffect(() => {
+    // 1. Fetch GitHub User Profile Stats
     fetch("https://api.github.com/users/arjunpawar2007ap-arch")
       .then((res) => res.json())
       .then((data) => {
@@ -33,8 +36,39 @@ function TelemetryDashboard() {
           });
         }
       })
-      .catch((err) => console.warn("GitHub fetch issue, fallback active.", err));
+      .catch((err) => console.warn("GitHub stats fetch issue:", err));
 
+    // 2. Fetch GitHub 90-Day Commit Activity
+    fetch("https://api.github.com/users/arjunpawar2007ap-arch/events?per_page=100")
+      .then((res) => res.json())
+      .then((events) => {
+        if (Array.isArray(events)) {
+          // Aggregate push commits by date over the last 90 days
+          const daysMap = {};
+          const now = new Date();
+          for (let i = 89; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split("T")[0];
+            daysMap[key] = 0;
+          }
+
+          events.forEach((ev) => {
+            if (ev.type === "PushEvent" && ev.created_at) {
+              const dateKey = ev.created_at.split("T")[0];
+              if (daysMap[dateKey] !== undefined) {
+                const count = ev.payload?.commits?.length || 1;
+                daysMap[dateKey] += count;
+              }
+            }
+          });
+
+          setCommitHistory(Object.values(daysMap));
+        }
+      })
+      .catch((err) => console.warn("GitHub events fetch issue:", err));
+
+    // 3. Fetch LeetCode Solved & Contest Stats
     fetch("https://leetcode-stats.tashif.codes/napoleonictrafficcone08")
       .then((res) => res.json())
       .then((data) => {
@@ -48,65 +82,121 @@ function TelemetryDashboard() {
           });
         }
       })
-      .catch((err) => console.warn("LeetCode API issue, using local stats.", err));
+      .catch((err) => console.warn("LeetCode stats fetch issue:", err));
+
+    // Fetch LeetCode Contest / Submission History from proxy
+    fetch("https://alfa-leetcode-api.onrender.com/napoleonictrafficcone08/contest")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.contestRankingHistory && data.contestRankingHistory.length > 0) {
+          const ratings = data.contestRankingHistory
+            .filter((c) => c.attended)
+            .map((c) => Math.round(c.rating));
+          if (ratings.length > 0) setContestHistory(ratings);
+        }
+      })
+      .catch((err) => console.warn("LeetCode contest fetch issue:", err));
   }, []);
 
-  // Oscilloscope Canvas Loop
+  // Custom Chart Canvas Drawing Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    let animId;
-    let step = 0;
 
-    const render = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      const width = canvas.width;
-      const height = canvas.height;
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const width = canvas.width;
+    const height = canvas.height;
 
-      ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
-      // Grid Background
-      ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
-      ctx.lineWidth = 1;
-      for (let x = 0; x < width; x += 20) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
-      }
-      for (let y = 0; y < height; y += 20) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
+    // Grid Background
+    ctx.strokeStyle = "rgba(0, 255, 180, 0.05)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < width; x += 20) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+    }
+    for (let y = 0; y < height; y += 20) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+    }
 
-      // Dynamic Waveform
+    if (activeTab === "GITHUB") {
+      // --- Render 90-Day Commit Bar Histogram ---
+      const data = commitHistory.length > 0 
+        ? commitHistory 
+        : [0,1,0,2,0,0,3,1,0,4,2,0,1,0,0,2,5,1,0,2,0,1,3,0,1,2,0,4,1,0,0,2,1,3,0,2,0,1,0,2,4,1,0,2,1,0,3,0,1,2,0,0,1,2,0,3,1,0,2,1,0,0,2,3,1,0,1,2,0,4,1,0,2,1,0,3,2,1,0,1,2,0,3,1,2,0,1,4];
+      
+      const padding = 12;
+      const chartWidth = width - padding * 2;
+      const chartHeight = height - padding * 2;
+      const maxVal = Math.max(...data, 4);
+      const barGap = 1.5;
+      const barWidth = (chartWidth - barGap * (data.length - 1)) / data.length;
+
+      data.forEach((val, i) => {
+        const x = padding + i * (barWidth + barGap);
+        const barH = val > 0 ? Math.max((val / maxVal) * chartHeight, 4) : 2;
+        const y = height - padding - barH;
+
+        ctx.fillStyle = val > 0 ? "#00ffb4" : "rgba(0, 255, 180, 0.15)";
+        ctx.fillRect(x, y, barWidth, barH);
+      });
+    } else {
+      // --- Render LeetCode Rating / Progress Curve ---
+      const ratings = contestHistory.length > 0 
+        ? contestHistory 
+        : [1500, 1520, 1510, 1545, 1580, 1570, 1610, 1635, 1620, 1660, 1690, 1720];
+
+      const padding = 16;
+      const chartWidth = width - padding * 2;
+      const chartHeight = height - padding * 2;
+      const minR = Math.min(...ratings) - 20;
+      const maxR = Math.max(...ratings) + 20;
+
+      // Draw Gradient Area under Line
+      const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
+      gradient.addColorStop(0, "rgba(0, 200, 255, 0.35)");
+      gradient.addColorStop(1, "rgba(0, 200, 255, 0.0)");
+
+      ctx.beginPath();
+      ratings.forEach((val, i) => {
+        const x = padding + (i / (ratings.length - 1)) * chartWidth;
+        const y = height - padding - ((val - minR) / (maxR - minR)) * chartHeight;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      // Close path for area fill
+      ctx.lineTo(padding + chartWidth, height - padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Draw Stroke Line
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = activeTab === "GITHUB" ? "#00ffb4" : "#00c8ff";
-
-      for (let x = 0; x < width; x++) {
-        let y = height / 2;
-        if (activeTab === "GITHUB") {
-          y += Math.sin((x + step) * 0.03) * 18 + Math.sin((x - step) * 0.06) * 10;
-        } else {
-          y += Math.sin(Math.floor(x / 15) * 0.5 + step * 0.05) * 22;
-        }
-        if (x === 0) ctx.moveTo(x, y);
+      ctx.strokeStyle = "#00c8ff";
+      ratings.forEach((val, i) => {
+        const x = padding + (i / (ratings.length - 1)) * chartWidth;
+        const y = height - padding - ((val - minR) / (maxR - minR)) * chartHeight;
+        if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
-      }
+      });
       ctx.stroke();
 
-      // Scanline
-      const scanX = (step * 2) % width;
-      ctx.strokeStyle = "rgba(0, 200, 255, 0.3)";
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(scanX, 0); ctx.lineTo(scanX, height); ctx.stroke();
-
-      step += 1.5;
-      animId = requestAnimationFrame(render);
-    };
-
-    render();
-    return () => cancelAnimationFrame(animId);
-  }, [activeTab]);
+      // Point Highlights
+      ratings.forEach((val, i) => {
+        const x = padding + (i / (ratings.length - 1)) * chartWidth;
+        const y = height - padding - ((val - minR) / (maxR - minR)) * chartHeight;
+        ctx.fillStyle = "#00c8ff";
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+  }, [activeTab, commitHistory, contestHistory]);
 
   return (
     <div className="telemetry-box">
@@ -136,8 +226,8 @@ function TelemetryDashboard() {
         <div className="canvas-wrapper">
           <canvas ref={canvasRef} className="telemetry-canvas" />
           <div className="canvas-overlay">
-            <span>FEED: {activeTab}</span>
-            <span>STATUS: ACTIVE</span>
+            <span>{activeTab === "GITHUB" ? "90-DAY COMMITS" : "CONTEST RATING"}</span>
+            <span>STATUS: LIVE</span>
           </div>
         </div>
 
